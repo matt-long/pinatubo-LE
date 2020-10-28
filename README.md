@@ -7,7 +7,7 @@ by comparing these runs with the full CESM-LE, we aim to quantify the Pinatubo e
 ## Conda environment
 We are using `conda-lock` to ensure a reproducible environment. Please update the conda-lock files when updating the environment.
 
-To create an environment from the lock fileL
+To create an environment from the lock file
 ```bash
 conda create -n pinatubo-LE --file environment/conda-linux-64.lock
 ```
