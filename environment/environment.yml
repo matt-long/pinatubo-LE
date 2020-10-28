@@ -1,0 +1,54 @@
+name: pinatubo-LE
+
+channels:
+    - conda-forge
+    - defaults
+
+dependencies:
+    - black
+    - bottleneck
+    - cartopy
+    - cf_units
+    - cftime
+    - cmocean
+    - conda-lock
+    - dask
+    - dask-jobqueue
+    - dask-mpi
+    - distributed
+    - eofs
+    - esmpy
+    - holoviews
+    - intake
+    - intake-esm
+    - ipykernel
+    - jupyter-server-proxy
+    - jupyter_contrib_nbextensions
+    - jupyterlab
+    - matplotlib
+    - metpy
+    - nc-time-axis
+    - netcdf4
+    - numba
+    - numpy
+    - pandas
+    - pint
+    - pip
+    - pop-tools
+    - pytest
+    - python
+    - scipy
+    - seaborn
+    - seawater
+    - statsmodels
+    - toolz
+    - tqdm
+    - watermark
+    - xarray>=0.15.1
+    - xesmf # xarray interface it ESMF tools
+    - xgcm # General Circulation Model Postprocessing with xarray
+    - xhistogram # Fast, flexible, label-aware histograms for numpy and xarray
+    - xrft # fourier transforms for xarray data
+    - zarr
+    - pip:
+        - ncar-jobqueue
