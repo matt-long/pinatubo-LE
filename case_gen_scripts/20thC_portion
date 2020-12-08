@@ -32,11 +32,9 @@ set -e
 # 2. Set some environment variables
 cesmroot=/glade/work/mlevy/codes/CESM/cesm1_1_2_LENS_n21
 caseroot=/glade/work/mlevy/codes/pinatubo-LE/cases
-compset=B20TRC5CNBDRD
+compset=B20TRLENS
 res=f09_g16
-case=b.e11.${compset}.${res}.$1
-
-# 3. Transfer restarts via data-access
+case=b.e11.B20TRC5CNBDRD.${res}.$1
 restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${case}/1990-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
 
@@ -45,8 +43,14 @@ rundir=/glade/scratch/mlevy/${case}/run
 echo "Creating ${case} to run from 1990..."
 cd ${cesmroot}/scripts
 ./create_newcase -compset ${compset} -res ${res} -case ${caseroot}/${case} -mach cheyenne
-#    b. run cesm_setup
 cd ${caseroot}/${case}
+#    b. Update configuration to not look for ref data (since I'm staging restarts manually)
+#       Also, 001 needs a special flag because CASE == RUN_REFCASE
+if [ "$1" == "001" ]; then
+  ./xmlchange BRNCH_RETAIN_CASENAME=TRUE
+fi
+./xmlchange GET_REFCASE=FALSE
+#    b. run cesm_setup
 ./cesm_setup
 #    c. xml changes, update user_nl_cam
 ./xmlchange CONTINUE_RUN=TRUE
