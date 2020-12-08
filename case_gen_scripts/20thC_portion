@@ -1,0 +1,63 @@
+#!/bin/bash
+# GOAL: single script to set up, build, and run B20TRC5CNBDRD portion of LENS
+#       (will require a second script to fork for RCP portion of the runs)
+#
+# TODO:
+#       1. Double-check years for run
+#       2. Heed warning about bug in first year of RCP forcing
+#          (vague, but I think I have notes somewhere)
+#
+# This script:
+# * Get 1990 rest files from campaign
+#   -- use scp and data-access to copy from campaign
+# * Run 1990 - 2005 (16 years), then fork to continue future run
+# First test ran ~18.5 SYPD => 8 years per 12 hour submission should suffice
+
+# 1. Error checks: must be on cheyenne and must pass single command line argument
+running_on=`hostname | cut -c 1-8`
+if [ ${running_on} != "cheyenne" ]; then
+  echo "Can not run on `hostname`, need to be on cheyenne"
+  exit 1
+fi
+
+if [ $# != 1 ]; then
+  echo "usage: clone_and_build CASEID"
+  echo "       CASEID -- id of CESM LE case to be cloned"
+  exit 1
+fi
+
+#    Also, abort if any command returns an error
+set -e
+
+# 2. Set some environment variables
+cesmroot=/glade/work/mlevy/codes/CESM/cesm1_1_2_LENS_n21
+caseroot=/glade/work/mlevy/codes/pinatubo-LE/cases
+compset=B20TRC5CNBDRD
+res=f09_g16
+case=b.e11.${compset}.${res}.$1
+
+# 3. Transfer restarts via data-access
+restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${case}/1990-01-01-00000
+rundir=/glade/scratch/mlevy/${case}/run
+
+# 3. Generate case
+#    a. run create_newcase
+echo "Creating ${case} to run from 1990..."
+cd ${cesmroot}/scripts
+./create_newcase -compset ${compset} -res ${res} -case ${caseroot}/${case} -mach cheyenne
+#    b. run cesm_setup
+cd ${caseroot}/${case}
+./cesm_setup
+#    c. xml changes, update user_nl_cam
+./xmlchange CONTINUE_RUN=TRUE
+./xmlchange STOP_N=8,STOP_OPTION=nyears,RESUBMIT=1
+echo "prescribed_volcaero_file = 'CCSM4_volcanic_1850-2008_prototype1_no-pinatubo.nc'" >> user_nl_cam
+#    d. modify run script: add account to charge, update wall time
+sed -i s/01:50/12:00/ ${case}.run
+sed -i 's/###PBS -A/#PBS -A UDEO0005/' ${case}.run
+#    e. stage restart files
+echo "Copying data from campaign via scp (using casper). May prompt for UCAS_Token_Response..."
+scp casper:${restdir}/* ${rundir}/
+#    f. build and submit
+qcmd -- ./${case}.build
+./${case}.submit
