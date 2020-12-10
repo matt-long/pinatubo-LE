@@ -34,8 +34,9 @@ cesmroot=/glade/work/mlevy/codes/CESM/cesm1_1_2_LENS_n21
 caseroot=/glade/work/mlevy/codes/pinatubo-LE/cases
 compset=B20TRLENS
 res=f09_g16
-case=b.e11.B20TRC5CNBDRD.${res}.$1
-restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${case}/1990-01-01-00000
+refcase=b.e11.B20TRC5CNBDRD.${res}.$1
+case=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
+restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${refcase}/1990-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
 
 # 3. Generate case
@@ -44,16 +45,15 @@ echo "Creating ${case} to run from 1990..."
 cd ${cesmroot}/scripts
 ./create_newcase -compset ${compset} -res ${res} -case ${caseroot}/${case} -mach cheyenne
 cd ${caseroot}/${case}
-#    b. Update configuration to not look for ref data (since I'm staging restarts manually)
-#       Also, 001 needs a special flag because CASE == RUN_REFCASE
-if [ "$1" == "001" ]; then
-  ./xmlchange BRNCH_RETAIN_CASENAME=TRUE
-fi
+#    b. Set up branch run starting from 1990
+#       Also want GET_REFCASE to be false because this script copies data from campaign
+./xmlchange RUN_TYPE=branch
+./xmlchange RUN_REFCASE=${refcase}
+./xmlchange RUN_REFDATE=1990-01-01
 ./xmlchange GET_REFCASE=FALSE
 #    b. run cesm_setup
 ./cesm_setup
 #    c. xml changes, update user_nl_cam
-./xmlchange CONTINUE_RUN=TRUE
 ./xmlchange STOP_N=8,STOP_OPTION=nyears,RESUBMIT=1
 echo "prescribed_volcaero_file = 'CCSM4_volcanic_1850-2008_prototype1_no-pinatubo.nc'" >> user_nl_cam
 #    d. modify run script: add account to charge, update wall time
