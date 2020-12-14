@@ -1,17 +1,11 @@
 #!/bin/bash
-# GOAL: single script to set up, build, and run B20TRLENS portion of LENS
-#       (will require a second script to fork for RCP portion of the runs)
-#
-# TODO:
-#       1. Double-check years for run
-#       2. Heed warning about bug in first year of RCP forcing
-#          (vague, but I think I have notes somewhere)
+# GOAL: single script to set up, build, and run BRCP85LENS portion of LENS
+#       (branch off of B20TRLENS run from other script)
 #
 # This script:
-# * Get 1990 rest files from campaign
-#   -- use scp and data-access to copy from campaign
-# * Run 1990 - 2005 (16 years), then fork to continue future run
-# First test ran ~18.5 SYPD => 8 years per 12 hour submission should suffice
+# * Get 2006 rest files from either campaign or scratch archive
+# * Run 2006 - 2025 (20 years), then fork to continue future run
+# First test ran ~18.5 SYPD => 5 years per 8 hour submission should suffice
 
 # 1. Error checks: must be on cheyenne and must pass single command line argument
 running_on=`hostname | cut -c 1-8`
@@ -32,16 +26,17 @@ set -e
 # 2. Set some environment variables
 cesmroot=/glade/work/mlevy/codes/CESM/cesm1_1_2_LENS_n21
 caseroot=/glade/work/mlevy/codes/pinatubo-LE/cases
-compset=B20TRLENS
+compset=BRCP85LENS
 res=f09_g16
-refcase=b.e11.B20TRC5CNBDRD.${res}.$1
-case=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
-restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${refcase}/1990-01-01-00000
+refcase=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
+case=b.e11.${compset}_no_pinatubo.${res}.$1
+restdir1=/glade/scratch/mlevy/archive/${refcase}/rest/2006-01-01-00000
+restdir2=/glade/campaign/univ/udeo0005/rests/$1/2006-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
 
 # 3. Generate case
 #    a. run create_newcase
-echo "Creating ${case} to run from 1990..."
+echo "Creating ${case} to run from 2006..."
 cd ${cesmroot}/scripts
 ./create_newcase -compset ${compset} -res ${res} -case ${caseroot}/${case} -mach cheyenne
 cd ${caseroot}/${case}
@@ -49,19 +44,23 @@ cd ${caseroot}/${case}
 #       Also want GET_REFCASE to be false because this script copies data from campaign
 ./xmlchange RUN_TYPE=branch
 ./xmlchange RUN_REFCASE=${refcase}
-./xmlchange RUN_REFDATE=1990-01-01
+./xmlchange RUN_REFDATE=2006-01-01
 ./xmlchange GET_REFCASE=FALSE
 #    b. run cesm_setup
 ./cesm_setup
 #    c. xml changes, update user_nl_cam
-./xmlchange STOP_N=8,STOP_OPTION=nyears,RESUBMIT=1
-echo "prescribed_volcaero_file = 'CCSM4_volcanic_1850-2008_prototype1_no-pinatubo.nc'" >> user_nl_cam
+./xmlchange STOP_N=5,STOP_OPTION=nyears,RESUBMIT=3
 #    d. modify run script: add account to charge, update wall time
-sed -i s/01:50/12:00/ ${case}.run
+sed -i s/01:50/08:00/ ${case}.run
 sed -i 's/###PBS -A/#PBS -A UDEO0005/' ${case}.run
 #    e. stage restart files
-echo "Copying data from campaign via scp (using casper). May prompt for UCAS_Token_Response..."
-scp casper:${restdir}/* ${rundir}/
+if [ -d ${restdir1} ]; then
+  echo "Copying restarts from archive..."
+  cp -v ${restdir1}/* ${rundir}/
+else
+  echo "Copying restarts from campaign via scp (using casper). May prompt for UCAS_Token_Response..."
+  scp casper:${restdir2}/* ${rundir}/
+fi
 #    f. build and submit
 qcmd -- ./${case}.build
 ./${case}.submit
