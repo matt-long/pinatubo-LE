@@ -130,3 +130,6 @@ dmypy.json
 
 # Case directories
 cases/
+
+# Reshaper logs
+data_reshaper/logs

@@ -29,7 +29,7 @@ caseroot=/glade/work/mlevy/codes/pinatubo-LE/cases
 compset=BRCP85LENS
 res=f09_g16
 refcase=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
-case=b.e11.${compset}_no_pinatubo.${res}.$1
+case=b.e11.BRCP85C5CNBDRD_no_pinatubo.${res}.$1
 restdir1=/glade/scratch/mlevy/archive/${refcase}/rest/2006-01-01-00000
 restdir2=/glade/campaign/univ/udeo0005/rests/$1/2006-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
@@ -40,12 +40,8 @@ echo "Creating ${case} to run from 2006..."
 cd ${cesmroot}/scripts
 ./create_newcase -compset ${compset} -res ${res} -case ${caseroot}/${case} -mach cheyenne
 cd ${caseroot}/${case}
-#    b. Set up branch run starting from 1990
-#       Also want GET_REFCASE to be false because this script copies data from campaign
-./xmlchange RUN_TYPE=branch
+#    b. Set up hybrid run using correct REFCASE
 ./xmlchange RUN_REFCASE=${refcase}
-./xmlchange RUN_REFDATE=2006-01-01
-./xmlchange GET_REFCASE=FALSE
 #    b. run cesm_setup
 ./cesm_setup
 #    c. xml changes, update user_nl_cam
