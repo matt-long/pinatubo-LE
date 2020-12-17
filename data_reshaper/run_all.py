@@ -119,7 +119,7 @@ def launch_jobs(start_year, end_year):
     """
     for component in args.components:
         for script in args.scripts:
-            job = f"{script.split('.')[0]}_{component}_{job_portion}"
+            job = f"{script.split('.')[0]}_{component}_{job_portion}_{ens_id}"
             logbase = f"logs/{job}"
             print(f"Submitting {script} for years {start_year} through {end_year} of {case} as {job}...")
             slurm_opts = f"{mail_opt} --job-name {job} --dependency=singleton"

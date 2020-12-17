@@ -39,6 +39,7 @@ case=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
 restdir=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo/restarts/orig_LENS/${refcase}/1990-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
 
+# Verify that restarts are available
 ssh casper "ls ${restdir} > /dev/null 2>&1" || RESTNOTFOUND=TRUE
 if [ "$RESTNOTFOUND" ]; then
   echo "${restdir} does not exist, can not stage restarts"
