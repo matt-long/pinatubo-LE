@@ -36,8 +36,14 @@ compset=B20TRLENS
 res=f09_g16
 refcase=b.e11.B20TRC5CNBDRD.${res}.$1
 case=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
-restdir=/glade/campaign/cgd/oce/people/mlevy/LENS-restarts/${refcase}/1990-01-01-00000
+restdir=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo/restarts/orig_LENS/${refcase}/1990-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
+
+ssh casper "ls ${restdir} > /dev/null 2>&1" || RESTNOTFOUND=TRUE
+if [ "$RESTNOTFOUND" ]; then
+  echo "${restdir} does not exist, can not stage restarts"
+  exit 1
+fi
 
 # 3. Generate case
 #    a. run create_newcase

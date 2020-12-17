@@ -31,8 +31,19 @@ res=f09_g16
 refcase=b.e11.B20TRC5CNBDRD_no_pinatubo.${res}.$1
 case=b.e11.BRCP85C5CNBDRD_no_pinatubo.${res}.$1
 restdir1=/glade/scratch/mlevy/archive/${refcase}/rest/2006-01-01-00000
-restdir2=/glade/campaign/univ/udeo0005/rests/$1/2006-01-01-00000
+restdir2=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo/restarts/no_pinatubo/${refcase}/2006-01-01-00000
 rundir=/glade/scratch/mlevy/${case}/run
+
+# Verify that restarts are available
+if [ ! -d ${restdir1} ]; then
+  ssh casper "ls ${restdir2} > /dev/null 2>&1" || RESTNOTFOUND=TRUE
+  if [ "$RESTNOTFOUND" ]; then
+    echo "${restdir1} does not exist"
+    echo "${restdir2} does not exist"
+    echo "Can not stage restarts"
+    exit 1
+  fi
+fi
 
 # 3. Generate case
 #    a. run create_newcase
