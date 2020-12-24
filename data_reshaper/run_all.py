@@ -54,10 +54,10 @@ def _parse_args():
         type=str,
         nargs="+",
         default=[
-            "pop",
-            "cice",
             "cam",
+            "cice",
             "clm",
+            "pop",
             "rtm",
         ],
         help="Scripts to submit to slurm",
@@ -87,6 +87,7 @@ def _parse_args():
         nargs="+",
         default=[
             "monthly.sh",
+            "annual.sh",
         ],
         help="Scripts to submit to slurm",
     )
@@ -119,6 +120,9 @@ def launch_jobs(start_year, end_year):
     """
     for component in args.components:
         for script in args.scripts:
+            # Only POP has annual output
+            if script == "annual.sh" and component != "pop":
+                continue
             job = f"{script.split('.')[0]}_{component}_{job_portion}_{ens_id}"
             logbase = f"logs/{job}"
             print(f"Submitting {script} for years {start_year} through {end_year} of {case} as {job}...")
