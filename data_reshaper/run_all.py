@@ -87,6 +87,7 @@ def _parse_args():
         nargs="+",
         default=[
             "monthly.sh",
+            "daily.sh",
             "annual.sh",
         ],
         help="Scripts to submit to slurm",
@@ -123,6 +124,9 @@ def launch_jobs(start_year, end_year):
             # Only POP has annual output
             if script == "annual.sh" and component != "pop":
                 continue
+            # Only run popeco for daily output
+            if component == "popeco" and script != "daily.sh":
+                continue
             job = f"{script.split('.')[0]}_{component}_{job_portion}_{ens_id}"
             logbase = f"logs/{job}"
             print(f"Submitting {script} for years {start_year} through {end_year} of {case} as {job}...")
@@ -143,6 +147,10 @@ def launch_jobs(start_year, end_year):
 
 if __name__ == "__main__":
     args = _parse_args()
+    # Kind of kludgy method to ensure that both pop.h.nday1 and pop.h.ecosys.nday1
+    # are converted to time series: add "popeco" component that daily.sh uses
+    if "pop" in args.components and "daily.sh" in args.scripts:
+        args.components.append("popeco")
     archive_root = args.archive_root
     mail_opt = (
         f"--mail-type=ALL --mail-user={os.environ['USER']}@ucar.edu"

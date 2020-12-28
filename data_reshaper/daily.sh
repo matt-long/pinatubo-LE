@@ -39,15 +39,23 @@ module load ncl/6.4.0
 #
 case "$COMPONENT" in
   pop )
-    HIST=pop.h ;;
+    HIST=pop.h.nday1
+    FILES_PER_YEAR=12 ;;
+  popeco )
+    HIST=pop.h.ecosys.nday1
+    FILES_PER_YEAR=12 ;;
   cice )
-    HIST=cice.h ;;
+    HIST=cice.h1
+    FILES_PER_YEAR=365 ;;
   cam )
-    HIST=cam.h0 ;;
+    HIST=cam.h1
+    FILES_PER_YEAR=1 ;;
   clm )
-    HIST=clm2.h0 ;;
+    HIST=clm2.h1
+    FILES_PER_YEAR=1 ;;
   rtm )
-    HIST=rtm.h0 ;;
+    HIST=rtm.h1
+    FILES_PER_YEAR=1 ;;
   * )
     echo "Unknown component ${COMPONENT}"
     exit 1 ;;
@@ -110,8 +118,8 @@ if [ ! -f ${LOCAL_PROC}/.DONE.${CASE}.${HIST}.${START_YEAR}_${END_YEAR} ] ; then
     HISTF+="${CASE}.${HIST}.${YEAR}*nc "
   done
   NHISTF=`/bin/ls ${HISTF} | wc -l`
-  if [ $(expr $NHISTF % 12) ] ; then
-    OUTTIME="${START_YEAR}01-${END_YEAR}12"
+  if [ $(expr $NHISTF % ${FILES_PER_YEAR}) ] ; then
+    OUTTIME="${START_YEAR}0101-${END_YEAR}1231"
     SUFFIX=".${OUTTIME}.nc" ; export SUFFIX
     echo -n "TS transpose_data start: " ; date
     ./Transpose_Data
@@ -122,7 +130,7 @@ if [ ! -f ${LOCAL_PROC}/.DONE.${CASE}.${HIST}.${START_YEAR}_${END_YEAR} ] ; then
     echo -n "TS transpose_data end  : " ; date
     touch ${LOCAL_PROC}/.DONE.${CASE}.${HIST}.${START_YEAR}_${END_YEAR}
   else
-    echo "File count mismatch on "${CASE}"."${HIST}"."${START_YEAR}_${END_YEAR}": "${NHISTF}" instead of multiple of 12"
+    echo "File count mismatch on "${CASE}"."${HIST}"."${YEAR}": "${NHISTF}" instead of ${FILES_PER_YEAR}"
   fi
 fi
 #
