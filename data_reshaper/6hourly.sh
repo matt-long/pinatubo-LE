@@ -3,7 +3,7 @@
 #SBATCH -n 64
 #SBATCH -N 4
 #SBATCH --ntasks-per-node=16
-#SBATCH -t 1:00:00
+#SBATCH -t 24:00:00
 #SBATCH -p dav
 #SBATCH --account=P93300606
 #SBATCH --mem 100G
@@ -37,8 +37,8 @@ module load nco/4.7.4
 module load ncl/6.4.0
 #
 case "$COMPONENT" in
-  pop )
-    HIST=pop.h.ecosys.nyear1 ;;
+  cam )
+    HIST=cam.h2 ;;
   * )
     echo "Unknown component ${COMPONENT}"
     exit 1 ;;
@@ -101,7 +101,7 @@ if [ ! -f ${LOCAL_PROC}/.DONE.${CASE}.${HIST}.${START_YEAR}_${END_YEAR} ] ; then
     HISTF+="${CASE}.${HIST}.${YEAR}*nc "
   done
   NHISTF=`/bin/ls ${HISTF} | wc -l`
-  OUTTIME="${START_YEAR}-${END_YEAR}"
+  OUTTIME="${START_YEAR}010100Z-${END_YEAR}123118Z"
   SUFFIX=".${OUTTIME}.nc" ; export SUFFIX
   echo -n "TS transpose_data start: " ; date
   ./Transpose_Data

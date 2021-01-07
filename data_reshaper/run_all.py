@@ -86,6 +86,7 @@ def _parse_args():
         type=str,
         nargs="+",
         default=[
+            "6hourly.sh",
             "monthly.sh",
             "daily.sh",
             "annual.sh",
@@ -121,6 +122,9 @@ def launch_jobs(start_year, end_year):
     """
     for component in args.components:
         for script in args.scripts:
+            # Only CAM has 6-hour output
+            if script == "6hourly.sh" and component != "cam":
+                continue
             # Only POP has annual output
             if script == "annual.sh" and component != "pop":
                 continue
