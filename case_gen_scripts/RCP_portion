@@ -68,6 +68,8 @@ else
   echo "Copying restarts from campaign via scp (using casper). May prompt for UCAS_Token_Response..."
   scp casper:${restdir2}/* ${rundir}/
 fi
-#    f. build and submit
+#    f. modify user_nl_cice to include some terms in daily stream
+sed -i -e '/f_aicen/ s/xh/dh/' -e '/fswthru/ s/xh/dh/' -e '/f_uvel/ s/xh/dh/' -e '/f_vvel/ s/xh/dh/' user_nl_cice
+#    g. build and submit
 qcmd -- ./${case}.build
 ./${case}.submit
