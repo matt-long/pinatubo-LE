@@ -105,14 +105,14 @@ gen_file_list() {
   #   $1: component that generated data (atm, ice, lnd, ocn, rof)
   #   $2: frequency of output (hourly1, hourly6, daily, monthly, annual)
   # Output:
-  #   globus_transfer_list.txt is formatted for globus transfer --batch
+  #   globus_lists/globus_transfer_list_$LABEL.txt is formatted for globus transfer --batch
 
   component=$1
   freq=$2
   streams=
   get_streams
 
-  rm -f globus_transfer_list.txt
+  rm -f globus_lists/globus_transfer_list_${component}_${freq}.txt
   DEST_ROOT=${CAMPAIGN_ROOT}/${component}/proc/tseries/${freq}
   for var in `ls ${DEST_ROOT}` ; do
     if [ ! -d ${DEST_ROOT}/${var} ]; then
@@ -127,12 +127,51 @@ gen_file_list() {
       SRC_ROOT=${GLADE_ROOT}/${MEMBER}/${stream}/proc/COMPLETED
       file=`cd ${SRC_ROOT} ; ls *.${var}.*.nc 2>/dev/null`
       if [ "${file}" ]; then
-        echo "${file} $var/$file" >> globus_transfer_list.txt
+        echo "${file} $var/$file" >> globus_lists/globus_transfer_list_${component}_${freq}.txt
         VAR_FOUND=TRUE
       fi
     done
     if [ "${VAR_FOUND}" != "TRUE" ]; then
       echo "No file for ${var} in ${streams}"
+    fi
+  done
+}
+
+################
+
+# Generate a file list to use with global transfer --batch
+gen_log_list() {
+  # Inputs:
+  #   None (will use global variable $MEMBER)
+  # Output:
+  #   globus_lists/globus_transfer_list_logs.txt is formatted for globus transfer --batch
+  SRC_ROOT=${ARCHIVE_ROOT}/${MEMBER}
+  DEST_ROOT=${CAMPAIGN_ROOT}/logs
+  mkdir -p ${DEST_ROOT}/${MEMBER}
+  rm -f globus_lists/globus_transfer_list_logs.txt
+  for file in `cd ${SRC_ROOT} ; find . -name *.log.*` ; do
+    echo "${file} ${MEMBER}/`basename $file`" >> globus_lists/globus_transfer_list_logs.txt
+  done
+}
+
+################
+
+# Generate a file list to use with global transfer --batch
+gen_rest_list() {
+  # Inputs:
+  #   None (will use global variable $MEMBER)
+  # Output:
+  #   globus_lists/globus_transfer_list_rest.txt is formatted for globus transfer --batch
+  SRC_ROOT=${ARCHIVE_ROOT}/${MEMBER}
+  DEST_ROOT=${CAMPAIGN_ROOT}/restarts/no_pinatubo/
+  for year in 2006 2026 ; do
+    restdir="${year}-01-01-00000"
+    if [ -d ${SRC_ROOT}/rest/${restdir} ]; then
+      mkdir -p ${DEST_ROOT}/${MEMBER}/${restdir}
+      rm -f globus_lists/globus_transfer_list_rest.txt
+      for file in `cd ${SRC_ROOT} ; find rest/${restdir} -type f` ; do
+        echo "${file} ${MEMBER}/${restdir}/`basename $file`" >> globus_lists/globus_transfer_list_rest.txt
+      done
     fi
   done
 }
@@ -146,10 +185,9 @@ transfer() {
   #   $1: label for transfer
   #   $2: additional opts (optional)
   label=${1//./_} # replace . with _ for label
-  echo ${label}
-  echo "Copying from ${SRC_ROOT} to ${DEST_ROOT} (${label})"
-#  globus transfer $OPTS $2 --label $label ${GLADE}:${SRC_ROOT} ${CAMPAIGN}:${DEST_ROOT} < globus_transfer_list.txt
-#  rm globus_transfer_list.txt
+  full_label=${label}_${compset}_${ensid}
+  echo "Copying from ${SRC_ROOT} to ${DEST_ROOT} (${full_label})"
+  globus transfer $OPTS $2 --label ${full_label} ${GLADE}:${SRC_ROOT} ${CAMPAIGN}:${DEST_ROOT} < globus_lists/globus_transfer_list_${label}.txt
 }
 
 ###############
@@ -172,10 +210,13 @@ then
   exit 1
 fi
 
+mkdir -p globus_lists
+
 # Set up some global variables for globus / file detection
 GLADE="d33b3614-6d04-11e5-ba46-22000b92c6ec"
 CAMPAIGN="6b5ab960-7bbf-11e8-9450-0a6d4e044368"
 OPTS="--sync-level checksum --preserve-mtime --verify-checksum --notify on --batch"
+ARCHIVE_ROOT=/glade/scratch/mlevy/archive
 GLADE_ROOT=/glade/scratch/mlevy/reshaper
 CAMPAIGN_ROOT=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo
 
@@ -208,7 +249,6 @@ do
     do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
-      wc -l globus_transfer_list.txt
       transfer "${glob_component}_${glob_stream}"
     done
 
@@ -218,7 +258,6 @@ do
     do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
-      wc -l globus_transfer_list.txt
       transfer "${glob_component}_${glob_stream}"
     done
 
@@ -228,7 +267,6 @@ do
     do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
-      wc -l globus_transfer_list.txt
       transfer "${glob_component}_${glob_stream}"
     done
 
@@ -238,7 +276,6 @@ do
     do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
-      wc -l globus_transfer_list.txt
       transfer "${glob_component}_${glob_stream}"
     done
 
@@ -248,18 +285,19 @@ do
     do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
-      wc -l globus_transfer_list.txt
       transfer "${glob_component}_${glob_stream}"
     done
 
     ##########################
     # Transfer restart files #
     ##########################
-
-
+    gen_rest_list
+    transfer "rest"
 
     ######################
     # Transfer log files #
     ######################
+    gen_log_list
+    transfer "logs"
   done
 done

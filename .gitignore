@@ -133,3 +133,4 @@ cases/
 
 # Reshaper logs
 data_reshaper/logs
+data_reshaper/globus_lists
