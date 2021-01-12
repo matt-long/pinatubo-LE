@@ -113,25 +113,25 @@ gen_file_list() {
   get_streams
 
   rm -f globus_lists/globus_transfer_list_${component}_${freq}.txt
+  SRC_ROOT=${GLADE_ROOT}/${MEMBER}
   DEST_ROOT=${CAMPAIGN_ROOT}/${component}/proc/tseries/${freq}
   for var in `ls ${DEST_ROOT}` ; do
-    if [ ! -d ${DEST_ROOT}/${var} ]; then
+    if [ ! -d ${DEST_ROOT}/${var} ] ; then
       echo "${DEST_ROOT}/${var} is a file, not directory"
       continue
     fi
     VAR_FOUND=FALSE
     for stream in ${streams} ; do
-      if [ "${VAR_FOUND}" == "TRUE" ]; then
+      if [ "${VAR_FOUND}" == "TRUE" ] ; then
         continue
       fi
-      SRC_ROOT=${GLADE_ROOT}/${MEMBER}/${stream}/proc/COMPLETED
-      file=`cd ${SRC_ROOT} ; ls *.${var}.*.nc 2>/dev/null`
-      if [ "${file}" ]; then
-        echo "${file} $var/$file" >> globus_lists/globus_transfer_list_${component}_${freq}.txt
+      file=`cd ${SRC_ROOT}/${stream}/proc/COMPLETED ; ls *.${var}.*.nc 2>/dev/null`
+      if [ "${file}" ] ; then
+        echo "${stream}/proc/COMPLETED/${file} $var/$file" >> globus_lists/globus_transfer_list_${component}_${freq}.txt
         VAR_FOUND=TRUE
       fi
     done
-    if [ "${VAR_FOUND}" != "TRUE" ]; then
+    if [ "${VAR_FOUND}" != "TRUE" ] ; then
       echo "No file for ${var} in ${streams}"
     fi
   done
@@ -166,7 +166,7 @@ gen_rest_list() {
   DEST_ROOT=${CAMPAIGN_ROOT}/restarts/no_pinatubo/
   for year in 2006 2026 ; do
     restdir="${year}-01-01-00000"
-    if [ -d ${SRC_ROOT}/rest/${restdir} ]; then
+    if [ -d ${SRC_ROOT}/rest/${restdir} ] ; then
       mkdir -p ${DEST_ROOT}/${MEMBER}/${restdir}
       rm -f globus_lists/globus_transfer_list_rest.txt
       for file in `cd ${SRC_ROOT} ; find rest/${restdir} -type f` ; do
@@ -199,15 +199,21 @@ transfer() {
 # Must have globus-cli installed and must be on casper
 globus --version > /dev/null 2>&1 && GLOBUS_FOUND=TRUE
 
-if [ ! "${GLOBUS_FOUND}" ]; then
+if [ ! "${GLOBUS_FOUND}" ] ; then
   echo "Can not find globus-cli!"
   exit 1
 fi
 
-if [ "`hostname | cut -d '-' -f 1`" != "casper" ]
-then
+if [ "`hostname | cut -d '-' -f 1`" != "casper" ] ; then
   echo "Can not run on `hostname`, need to run on Casper!"
   exit 1
+fi
+
+# Arguments are expected to be ensemble ids to loop through
+if [ $# -eq 0 ] ; then
+  ENSIDS=`seq -f "%03g" 1 35`
+else
+  ENSIDS="$@"
 fi
 
 mkdir -p globus_lists
@@ -227,12 +233,10 @@ echo "\$ ${cmd}"
 ${cmd}
 read -p "Log in to globus via the above URL then press enter to continue..."
 
-for ensid in {001..035}
-do
-  for compset in B20TRC5CNBDRD BRCP85C5CNBDRD
-  do
+for ensid in ${ENSIDS} ; do
+  for compset in B20TRC5CNBDRD BRCP85C5CNBDRD ; do
     MEMBER=b.e11.${compset}_no_pinatubo.f09_g16.${ensid}
-    if [ ! -d ${GLADE_ROOT}/${MEMBER} ]; then
+    if [ ! -d ${GLADE_ROOT}/${MEMBER} ] ; then
       echo "Can not find ${MEMBER} in ${GLADE_ROOT}"
       continue
     fi
@@ -245,8 +249,7 @@ do
 
     # CAM output
     glob_component=atm
-    for glob_stream in daily hourly6 monthly
-    do
+    for glob_stream in daily hourly6 monthly ; do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
       transfer "${glob_component}_${glob_stream}"
@@ -254,8 +257,7 @@ do
 
     # CICE output
     glob_component=ice
-    for glob_stream in daily monthly
-    do
+    for glob_stream in daily monthly ; do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
       transfer "${glob_component}_${glob_stream}"
@@ -263,8 +265,7 @@ do
 
     # CLM output
     glob_component=lnd
-    for glob_stream in daily monthly
-    do
+    for glob_stream in daily monthly ; do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
       transfer "${glob_component}_${glob_stream}"
@@ -272,8 +273,7 @@ do
 
     # POP output
     glob_component=ocn
-    for glob_stream in annual daily monthly
-    do
+    for glob_stream in annual daily monthly ; do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
       transfer "${glob_component}_${glob_stream}"
@@ -281,8 +281,7 @@ do
 
     # RTM output
     glob_component=rof
-    for glob_stream in daily monthly
-    do
+    for glob_stream in daily monthly ; do
       echo "Compiling list for ${glob_stream} in ${glob_component}..."
       gen_file_list ${glob_component} ${glob_stream}
       transfer "${glob_component}_${glob_stream}"
