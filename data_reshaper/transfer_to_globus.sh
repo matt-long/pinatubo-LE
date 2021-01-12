@@ -140,6 +140,22 @@ gen_file_list() {
 ################
 
 # Generate a file list to use with global transfer --batch
+gen_popdiags_list() {
+  # Inputs:
+  #   None (will use global variable $MEMBER)
+  # Output:
+  #   globus_lists/globus_transfer_list_popdiags.txt is formatted for globus transfer --batch
+  SRC_ROOT=${ARCHIVE_ROOT}/${MEMBER}
+  DEST_ROOT=${CAMPAIGN_ROOT}/ocn/diags_pop
+  rm -f globus_lists/globus_transfer_list_popdiags.txt
+  for file in `cd ${SRC_ROOT} ; find . -name ${MEMBER}.pop.d*` ; do
+    echo "${file} `basename $file`" >> globus_lists/globus_transfer_list_popdiags.txt
+  done
+}
+
+################
+
+# Generate a file list to use with global transfer --batch
 gen_log_list() {
   # Inputs:
   #   None (will use global variable $MEMBER)
@@ -298,5 +314,12 @@ for ensid in ${ENSIDS} ; do
     ######################
     gen_log_list
     transfer "logs"
+
+    ########################
+    # Transfer pop.d files #
+    ########################
+    gen_popdiags_list
+    transfer "popdiags"
+
   done
 done
