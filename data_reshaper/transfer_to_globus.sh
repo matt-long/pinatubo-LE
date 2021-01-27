@@ -203,7 +203,7 @@ transfer() {
   label=${1//./_} # replace . with _ for label
   full_label=${label}_${compset}_${ensid}
   echo "Copying from ${SRC_ROOT} to ${DEST_ROOT} (${full_label})"
-  globus transfer $OPTS $2 --label ${full_label} ${GLADE}:${SRC_ROOT} ${CAMPAIGN}:${DEST_ROOT} < globus_lists/globus_transfer_list_${label}.txt
+  globus transfer $OPTS $2 --label ${full_label} ${GLADE}:${SRC_ROOT} ${CAMPAIGN}:${DEST_ROOT} < globus_lists/globus_transfer_list_${label}.txt && COUNT=$((COUNT+1))
 }
 
 ###############
@@ -225,6 +225,7 @@ if [ "`hostname | cut -d '-' -f 1`" != "casper" ] ; then
   exit 1
 fi
 
+COUNT=0
 # Arguments are expected to be ensemble ids to loop through
 if [ $# -eq 0 ] ; then
   ENSIDS=`seq -f "%03g" 1 35`
@@ -323,3 +324,5 @@ for ensid in ${ENSIDS} ; do
 
   done
 done
+
+echo "Submitted ${COUNT} globus transfers"

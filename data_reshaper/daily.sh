@@ -3,7 +3,7 @@
 #SBATCH -n 64
 #SBATCH -N 4
 #SBATCH --ntasks-per-node=16
-#SBATCH -t 1:00:00
+#SBATCH -t 2:00:00
 #SBATCH -p dav
 #SBATCH --account=P93300606
 #SBATCH --mem 100G
