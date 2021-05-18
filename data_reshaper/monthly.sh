@@ -1,41 +1,41 @@
 #!/bin/bash -l
+
+#PBS -A P93300606
+#PBS -l select=1:ncpus=36:mpiprocs=36:mem=200GB
+#PBS -l walltime=6:00:00
+#PBS -q casper
 #
-#SBATCH -n 64
-#SBATCH -N 4
-#SBATCH --ntasks-per-node=16
-#SBATCH -t 1:00:00
-#SBATCH -p dav
-#SBATCH --account=P93300606
-#SBATCH --mem 100G
-#SBATCH -m block
-#
-module purge
 conda deactivate || echo "conda not loaded"
 #
+NODES=36 ; export NODES
 # PARSE COMMAND LINE ARGUMENTS
-if [ $# != 5 ]; then
-  echo "ERROR: got $# arguments"
-  echo "usage: $0 CASE ARCHIVE_ROOT START_YEAR END_YEAR COMPONENT"
-  exit 1
-fi
+# (If variables aren't already defined thanks to qsub)
+if [ -z "${CASE}" ] && [ -z "${ARCHIVE_ROOT}" ] && [ -z "${START_YEAR}" ] && [ -z "${END_YEAR}" ] && [ -z "${COMPONENT}" ]; then
+  if [ $# != 5 ]; then
+    echo "ERROR: got $# arguments"
+    echo "usage: $0 CASE ARCHIVE_ROOT START_YEAR END_YEAR COMPONENT"
+    exit 1
+  fi
 
-CASE=${1} ; export CASE
-ARCHIVE_ROOT=${2}
-START_YEAR=${3}
-END_YEAR=${4}
-COMPONENT=${5}
+  CASE=${1}
+  ARCHIVE_ROOT=${2}
+  START_YEAR=${3}
+  END_YEAR=${4}
+  COMPONENT=${5}
+fi
+export CASE
 echo "Reshaping ${COMPONENT} output for years ${START_YEAR} through ${END_YEAR} for ${CASE}..."
+START_YEAR=$(printf "%04d" ${START_YEAR})
+END_YEAR=$(printf "%04d" ${END_YEAR})
 #
-cd /glade/p/cesm/postprocessing_dav/cesm-env2/bin
-. activate
-#
-module load intel/17.0.1
+source /etc/profile.d/modules.sh
+module purge
+module load python/3.7.9
 module load ncarenv
-module load ncarcompilers
-module load impi
-module load netcdf/4.6.1
-module load nco/4.7.4
-module load ncl/6.4.0
+module load nco #/4.9.5
+module load intel #/19.0.5
+module load openmpi/4.1.0
+ncar_pylib
 #
 case "$COMPONENT" in
   pop )
@@ -54,7 +54,6 @@ case "$COMPONENT" in
 esac
 export HIST
 
-PATH=/glade/p/cesm/postprocessing_dav/cesm-env2/bin:/usr/local/bin:${PATH} ; export PATH
 #
 NCKS=`which ncks`  ; export NCKS
 PROCHOST=`hostname`;export PROCHOST
@@ -103,7 +102,8 @@ ln -s -f $BASEDIR/run_slice2series_dav Transpose_Data
 rm -f ${CASE}.${HIST}.*nc
 if [ ! -f ${LOCAL_PROC}/.DONE.${CASE}.${HIST}.${START_YEAR}_${END_YEAR} ] ; then
   HISTF=
-  for YEAR in $(seq ${START_YEAR} ${END_YEAR}) ; do
+  for THIS_YEAR in $(seq ${START_YEAR} ${END_YEAR}) ; do
+    YEAR=$(printf "%04d" ${THIS_YEAR})
     echo "YEAR: ${YEAR}"
     echo "LINKING FROM ${LOCAL_HIST}"
     ln -s -f ${LOCAL_HIST}/${CASE}.${HIST}.${YEAR}*nc .

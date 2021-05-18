@@ -60,7 +60,7 @@ def _parse_args():
             "pop",
             "rtm",
         ],
-        help="Scripts to submit to slurm",
+        help="Components to convert to time series",
     )
 
     # Optional: location of DOUT_S_ROOT
@@ -91,7 +91,7 @@ def _parse_args():
             "daily.sh",
             "annual.sh",
         ],
-        help="Scripts to submit to slurm",
+        help="Scripts to submit to PBS",
     )
 
     # Optional: is this a dry-run? If so, don't submit anything
@@ -103,12 +103,12 @@ def _parse_args():
         help="If true, do not actually submit job",
     )
 
-    # Optional: By default, slurm will email users when jobs start and finish
+    # Optional: By default, PBS will email users when jobs start and finish
     parser.add_argument(
         "--no-mail",
         action="store_false",
         dest="send_mail",
-        help="If true, send SLURM emails to {user}@ucar.edu",
+        help="If true, send PBS emails to {user}@ucar.edu",
     )
 
     return parser.parse_args()
@@ -134,10 +134,14 @@ def launch_jobs(start_year, end_year):
             job = f"{script.split('.')[0]}_{component}_{job_portion}_{ens_id}"
             logbase = f"logs/{job}"
             print(f"Submitting {script} for years {start_year} through {end_year} of {case} as {job}...")
-            slurm_opts = f"{mail_opt} --job-name {job} --dependency=singleton"
-            slurm_opts += f" -o {logbase}.out.%J -e {logbase}.err.%J"
-            script_opts = f"{case} {archive_root} {start_year} {end_year} {component}"
-            cmd = f"sbatch {slurm_opts} {script} {script_opts}"
+            # TODO: figure out dependency option (probably need to capture jobid,
+            #       store in a dict with key based on {job}, and then set up
+            #       "-W depend=after:{jobid}"
+            PBS_opts= f"{mail_opt} -N {job}" # --dependency=singleton"
+            # PBS_opts += f" -o {logbase}.out.%J -e {logbase}.err.%J"
+            script_vars = f"-v CASE={case},ARCHIVE_ROOT={archive_root},START_YEAR={start_year},END_YEAR={end_year},COMPONENT={component}"
+            # run from logs/ so that PBS output ends up in correct place
+            cmd = f"cd logs ; qsub {PBS_opts} {script_vars} ../{script}"
             if not args.dryrun:
                 # note: the --dependency=singleton option means only one job per job name
                 #       Some jobs had been crashing, and I think it was due to temporary
@@ -157,9 +161,9 @@ if __name__ == "__main__":
         args.components.append("popeco")
     archive_root = args.archive_root
     mail_opt = (
-        f"--mail-type=ALL --mail-user={os.environ['USER']}@ucar.edu"
+        f"-m abe -M {os.environ['USER']}@ucar.edu"
         if args.send_mail
-        else "--mail-type=NONE"
+        else "-m n"
     )
 
     ens_id = f"{args.ensemble_member:03}"
