@@ -8,8 +8,8 @@ fi
 ROOTDIR=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo/
 
 # Restart files
-echo "Restarts: `find $ROOTDIR/restarts/no_pinatubo/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f | wc -l`"
-echo "Logs: `find $ROOTDIR/logs/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f | wc -l`"
+echo "Restarts: `find $ROOTDIR/restarts/no_pinatubo/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
+echo "Logs: `find $ROOTDIR/logs/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
 echo ""
 
 for compset in B20TRC5CNBDRD BRCP85C5CNBDRD
@@ -33,8 +33,15 @@ do
       echo "${component}/proc/tseries/${freq}: ${varcount}"
     done
     if [ ${component} == "ocn" ]; then
+      cd ${ROOTDIR}/${component}/proc/zonal_avg_tseries
+      varcount=0
+      for varname in `ls`
+      do
+        ls ${varname}/${casename}.* >/dev/null 2>&1  && varcount=$((varcount+1))
+      done
+      echo "${component}/proc/zonal_avg_tseries: ${varcount}"
       cd ${ROOTDIR}/${component}/diags_pop
-      varcount=`ls ${casename}.* | wc -l`
+      varcount=`ls ${casename}.* 2> /dev/null | wc -l`
       echo "${component}/diags_pop: ${varcount}"
     fi
   done
