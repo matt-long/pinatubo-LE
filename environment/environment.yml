@@ -28,6 +28,7 @@ dependencies:
     - matplotlib
     - metpy
     - nc-time-axis
+    - ncar-jobqueue
     - netcdf4
     - numba
     - numpy
@@ -50,5 +51,4 @@ dependencies:
     - xhistogram # Fast, flexible, label-aware histograms for numpy and xarray
     - xrft # fourier transforms for xarray data
     - zarr
-    - pip:
-        - ncar-jobqueue
+    
