@@ -244,13 +244,10 @@ GLADE_ROOT=/glade/scratch/mlevy/reshaper
 
 # No-pinatubo runs
 #case_class=no_pinatubo
-#compsets="B20TRC5CNBDRD BRCP85C5CNBDRD"
 # Re-running vanilla LENS on cheyenne
 case_class=cheyenne
-#compsets=B20TRC5CNBDRD
-#compsets="B20TRC5CNBDRD BRCP85C5CNBDRD"
-compsets=BRCP85C5CNBDRD
 
+compsets="B20TRC5CNBDRD BRCP85C5CNBDRD"
 CAMPAIGN_ROOT=/glade/campaign/univ/udeo0005/cesmLE_${case_class}
 
 echo "transferring _${case_class}" runs
