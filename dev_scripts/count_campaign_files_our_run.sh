@@ -5,16 +5,18 @@ if [ $# -eq 0 ]; then
 else
   ensid=$1
 fi
-ROOTDIR=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo/
+#EXP=no_pinatubo
+EXP=cheyenne
+ROOTDIR=/glade/campaign/univ/udeo0005/cesmLE_${EXP}/
 
 # Restart files
-echo "Restarts: `find $ROOTDIR/restarts/no_pinatubo/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
-echo "Logs: `find $ROOTDIR/logs/b.e11.*BDRD_no_pinatubo.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
+echo "Restarts: `find $ROOTDIR/restarts/no_pinatubo/b.e11.*BDRD_${EXP}.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
+echo "Logs: `find $ROOTDIR/logs/b.e11.*BDRD_${EXP}.f09_g16.${ensid} -type f 2> /dev/null | wc -l`"
 echo ""
 
 for compset in B20TRC5CNBDRD BRCP85C5CNBDRD
 do
-  casename=b.e11.${compset}_no_pinatubo.f09_g16.${ensid}
+  casename=b.e11.${compset}_${EXP}.f09_g16.${ensid}
   echo ${compset}
   echo "----"
   for component in atm ice lnd ocn rof

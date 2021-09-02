@@ -241,7 +241,19 @@ CAMPAIGN="6b5ab960-7bbf-11e8-9450-0a6d4e044368"
 OPTS="--sync-level checksum --preserve-mtime --verify-checksum --notify on --batch"
 ARCHIVE_ROOT=/glade/scratch/mlevy/archive
 GLADE_ROOT=/glade/scratch/mlevy/reshaper
-CAMPAIGN_ROOT=/glade/campaign/univ/udeo0005/cesmLE_no_pinatubo
+
+# No-pinatubo runs
+#case_class=no_pinatubo
+#compsets="B20TRC5CNBDRD BRCP85C5CNBDRD"
+# Re-running vanilla LENS on cheyenne
+case_class=cheyenne
+#compsets=B20TRC5CNBDRD
+#compsets="B20TRC5CNBDRD BRCP85C5CNBDRD"
+compsets=BRCP85C5CNBDRD
+
+CAMPAIGN_ROOT=/glade/campaign/univ/udeo0005/cesmLE_${case_class}
+
+echo "transferring _${case_class}" runs
 
 # Activate globus
 cmd="globus endpoint activate --web ${GLADE}"
@@ -251,8 +263,8 @@ ${cmd}
 read -p "Log in to globus via the above URL then press enter to continue..."
 
 for ensid in ${ENSIDS} ; do
-  for compset in B20TRC5CNBDRD BRCP85C5CNBDRD ; do
-    MEMBER=b.e11.${compset}_no_pinatubo.f09_g16.${ensid}
+  for compset in ${compsets} ; do
+    MEMBER=b.e11.${compset}_${case_class}.f09_g16.${ensid}
     if [ ! -d ${GLADE_ROOT}/${MEMBER} ] ; then
       echo "Can not find ${MEMBER} in ${GLADE_ROOT}"
       continue
